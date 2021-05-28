@@ -48,7 +48,7 @@ Moving on to implementing the `AllianceRequestBuilder`, we have to keep in mind,
 `axios` requests. Axios is a Javascript library for sending requests. <br> You create an implementation by implementing the interface `AllianceRequestBuilder`.
 Please follow the example below:
 
-````
+```
 import axios, { AxiosRequestConfig } from "axios";
 
 import { AllianceConfig, AllianceRequestBuilder, AllianceRoute } from "alliance-client-lib/lib/router";
