@@ -1,6 +1,6 @@
 {
   "name": "alliance-client-lib",
-  "version": "1.0.1-alpha7",
+  "version": "1.0.2-rc2",
   "description": "Javascript library for making development easier and more maintainable for client applications.",
   "main": "lib/index.js",
   "license": "MIT",
