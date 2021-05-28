@@ -79,7 +79,7 @@ export class AllianceRequest<T> {
 
             if (this._route.method.toLowerCase() === "get") {
                 promise = axios.get(
-                    this._allianceConfig.requestBuilder.buildFullPath(this._route, this._allianceConfig.errorHandler),
+                    buildFullPath(this._route),
                     this._allianceConfig.requestBuilder.buildRequestConfig(
                         this._route,
                         this._config,
@@ -88,7 +88,7 @@ export class AllianceRequest<T> {
                 );
             } else if (this._route.method.toLowerCase() === "post") {
                 promise = axios.post(
-                    this._allianceConfig.requestBuilder.buildFullPath(this._route, this._allianceConfig.errorHandler),
+                    buildFullPath(this._route),
                     this._data,
                     this._allianceConfig.requestBuilder.buildRequestConfig(
                         this._route,
@@ -98,7 +98,7 @@ export class AllianceRequest<T> {
                 );
             } else if (this._route.method.toLowerCase() === "put") {
                 promise = axios.put(
-                    this._allianceConfig.requestBuilder.buildFullPath(this._route, this._allianceConfig.errorHandler),
+                    buildFullPath(this._route),
                     this._data,
                     this._allianceConfig.requestBuilder.buildRequestConfig(
                         this._route,
@@ -108,7 +108,7 @@ export class AllianceRequest<T> {
                 );
             } else if (this._route.method.toLowerCase() === "delete") {
                 promise = axios.delete(
-                    this._allianceConfig.requestBuilder.buildFullPath(this._route, this._allianceConfig.errorHandler),
+                    buildFullPath(this._route),
                     this._allianceConfig.requestBuilder.buildRequestConfig(
                         this._route,
                         this._config,
@@ -205,18 +205,35 @@ export interface AllianceRequestBuilder {
     ): AxiosRequestConfig;
 
     /**
-     * Insert query and params into the given path
-     * @param path Path with parameters (e.g.: /example/:id)
-     * @param query Query parameters
-     * @param params Parameters list of path
-     * @param errorHandler Handle errors
-     * @returns Path as string
-     */
-    buildFullPath(route: AllianceRoute, errorHandler: ErrorHandler): string;
-
-    /**
      * Setup axios with default values for requests
      * @param config Instance of AllianceConfig
      */
     buildAxios(config: AllianceConfig): void;
+}
+
+/**
+ * Insert query and params into the given path
+ * @param path Path with parameters (e.g.: /example/:id)
+ * @param query Query parameters
+ * @param params Parameters list of path
+ * @param errorHandler Handle errors
+ * @returns Path as string
+ */
+function buildFullPath(route: AllianceRoute): string {
+    let path = route.path;
+
+    if (route.query)
+        path +=
+            "?" +
+            Object.keys(route.query)
+                .map((key) => key + "=" + route.query[key])
+                .join("&");
+
+    if (route.params) {
+        for (const key in route.params) {
+            path = path.replace(":" + key, route.params[key]);
+        }
+    }
+
+    return path;
 }
