@@ -1,31 +1,28 @@
+import { HashMap } from "./util";
+
 export interface Event<T> {
     eventName: string;
     payload: T;
 }
 
-export abstract class EventListener<T> {
-    public event: Event<T>;
-
-    constructor(_event: Event<T>) {
-        this.event = _event;
-    }
-
+export interface EventListener {
     /**
      * Handle a fired event
      * @param event Event to handle
      */
-    abstract onEvent(event: Event<T>): void;
+    (event: Event<any>): void;
 }
 
 export class EventPublisher {
-    private static _eventListenerRegistry: EventListener<any>[] = [];
+    private static _eventListenerRegistry: HashMap<EventListener> = {};
 
     /**
      * Register a new event listener
+     * @param eventName Name of the event
      * @param listener Event listener to register
      */
-    public static registerListener(listener: EventListener<any>) {
-        this._eventListenerRegistry.push(listener);
+    public static registerListener(eventName: string, listener: EventListener) {
+        this._eventListenerRegistry[eventName.toLowerCase()] = listener;
     }
 
     /**
@@ -33,11 +30,12 @@ export class EventPublisher {
      * @param event Event to emit
      */
     public static emitEvent(event: Event<any>) {
-        const listeners: EventListener<any>[] = this._eventListenerRegistry.filter(
-            (listener) => listener.event.eventName === event.eventName,
-        );
+        const listeners: EventListener[] = Object.keys(this._eventListenerRegistry)
+            .filter((key) => key === event.eventName.toLowerCase())
+            .map((key) => this._eventListenerRegistry[key]);
+
         for (const listener of listeners) {
-            listener.onEvent(event);
+            listener(event);
         }
     }
 }
