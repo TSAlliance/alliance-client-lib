@@ -72,8 +72,8 @@ export class AllianceRequest<T> {
      * Perform the request
      * @returns A promise containing the requested type or null
      */
-    public async perform(): Promise<T> {
-        return new Promise((resolve) => {
+    public async perform(handleErrorInternal: boolean = true): Promise<T> {
+        return new Promise((resolve, reject) => {
             let result: T = null;
             let promise: Promise<AxiosResponse<T>>;
 
@@ -121,7 +121,12 @@ export class AllianceRequest<T> {
                 .then((value: AxiosResponse<any>) => {
                     if (value.status != 200) {
                         const response: AxiosResponse<ApiError> = value;
-                        this._allianceConfig.errorHandler.handleErrorResponse(response);
+
+                        if (handleErrorInternal) {
+                            this._allianceConfig.errorHandler.handleErrorResponse(response);
+                        } else {
+                            reject(response.data as ApiError);
+                        }
 
                         // Return default values if set
                         if (this._defaults) {
@@ -136,9 +141,18 @@ export class AllianceRequest<T> {
                 .catch((reason) => {
                     if (reason.response) {
                         const response: AxiosResponse<ApiError> = reason.response;
-                        this._allianceConfig.errorHandler.handleErrorResponse(response);
+
+                        if (handleErrorInternal) {
+                            this._allianceConfig.errorHandler.handleErrorResponse(response);
+                        } else {
+                            reject(response.data);
+                        }
                     } else {
-                        this._allianceConfig.errorHandler.handleError(reason);
+                        if (handleErrorInternal) {
+                            this._allianceConfig.errorHandler.handleError(reason);
+                        } else {
+                            reject(reason);
+                        }
                     }
 
                     // Return default values if set
