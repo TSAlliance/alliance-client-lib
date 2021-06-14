@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse, CancelTokenSource } from "axios";
 import { ApiError, ErrorHandler } from "./error";
+import { Pageable } from "./pagination";
 import { HashMap } from "./util";
 
 export enum AllianceRouteMethod {
@@ -23,6 +24,7 @@ export interface AllianceRoute {
     method: AllianceRouteMethod;
     params?: HashMap<any>;
     query?: HashMap<any>;
+    pageable?: Pageable;
     authRequired?: boolean;
 }
 
@@ -236,12 +238,16 @@ export interface AllianceRequestBuilder {
 function buildFullPath(route: AllianceRoute): string {
     let path = route.path;
 
-    if (route.query)
-        path +=
-            "?" +
-            Object.keys(route.query)
-                .map((key) => key + "=" + route.query[key])
-                .join("&");
+    const query = {
+        ...route.query,
+        ...route.pageable,
+    };
+
+    path +=
+        "?" +
+        Object.keys(query)
+            .map((key) => key + "=" + query[key])
+            .join("&");
 
     if (route.params) {
         for (const key in route.params) {
