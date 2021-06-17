@@ -26,6 +26,7 @@ export interface AllianceRoute {
     query?: HashMap<any>;
     pageable?: Pageable;
     authRequired?: boolean;
+    useOptionalAuth?: boolean;
 }
 
 export class AllianceRequest<T> {
