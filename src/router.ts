@@ -30,6 +30,10 @@ export interface AllianceRoute {
     useOptionalAuth?: boolean;
 }
 
+export interface AllianceCancelFunction {
+    (reason: ApiError): void;
+}
+
 export class AllianceRequest<T> {
     private _route: AllianceRoute;
     private _config: AxiosRequestConfig;
@@ -81,29 +85,35 @@ export class AllianceRequest<T> {
             let result: T = null;
             let promise: Promise<AxiosResponse<T>>;
 
+            let cancelReason;
+
             const method = this._route.method.toLowerCase();
+            const requestConfig = this._allianceConfig.requestBuilder.buildRequestConfig(
+                this._route,
+                this._config,
+                this._allianceConfig.errorHandler,
+                (reason: ApiError) => {
+                    cancelReason = reason;
+                },
+            );
+
+            if (cancelReason) {
+                if (this._defaults) {
+                    resolve(this._defaults);
+                    console.warn("A request was cancelled before sending to api: ", cancelReason);
+                } else {
+                    reject(cancelReason);
+                }
+
+                return;
+            }
 
             if (method === "get" || method === "delete") {
-                promise = axios[method](
-                    buildFullPath(this._route),
-                    this._allianceConfig.requestBuilder.buildRequestConfig(
-                        this._route,
-                        this._config,
-                        this._allianceConfig.errorHandler,
-                    ),
-                );
+                promise = axios[method](buildFullPath(this._route), requestConfig);
             } else if (method === "post" || method === "put") {
-                promise = axios[method](
-                    buildFullPath(this._route),
-                    this._data,
-                    this._allianceConfig.requestBuilder.buildRequestConfig(
-                        this._route,
-                        this._config,
-                        this._allianceConfig.errorHandler,
-                    ),
-                );
+                promise = axios[method](buildFullPath(this._route), this._data, requestConfig);
             } else {
-                if(this._defaults) {
+                if (this._defaults) {
                     resolve(this._defaults);
                 } else {
                     reject(new ClientInternalError());
@@ -118,9 +128,12 @@ export class AllianceRequest<T> {
                     if (value.status != 200) {
                         const response: AxiosResponse<ApiError> = value;
 
-                        if(this._defaults) {
+                        if (this._defaults) {
                             resolve(this._defaults);
-                            console.warn("An error occured but default behaviour was specified: ", response.data as ApiError)
+                            console.warn(
+                                "An error occured but default behaviour was specified: ",
+                                response.data as ApiError,
+                            );
                         } else {
                             if (handleErrorInternal) {
                                 this._allianceConfig.errorHandler.handleErrorResponse(response);
@@ -130,7 +143,7 @@ export class AllianceRequest<T> {
                             }
                         }
                     } else {
-                        resolve(result);
+                        resolve(value.data);
                     }
                 })
                 .catch((reason) => {
@@ -156,15 +169,15 @@ export class AllianceRequest<T> {
                     if (this._defaults) {
                         resolve(this._defaults);
                     } else {
-                        reject(rejectData)
+                        reject(rejectData);
                     }
                 });
         });
     }
 }
 
-export class AllianceApiService {
-    private static _instance: AllianceApiService;
+export class AllianceSDK {
+    private static _instance: AllianceSDK;
     private _allianceConfig: AllianceConfig;
 
     constructor(config: AllianceConfig) {
@@ -186,8 +199,8 @@ export class AllianceApiService {
      * @param config Configuration of base url
      * @returns Instance of AllianceApiService
      */
-    public static createInstance(config: AllianceConfig): AllianceApiService {
-        this._instance = new AllianceApiService(config);
+    public static createInstance(config: AllianceConfig): AllianceSDK {
+        this._instance = new AllianceSDK(config);
         this._instance._allianceConfig.requestBuilder.buildAxios(config);
         return this._instance;
     }
@@ -196,7 +209,7 @@ export class AllianceApiService {
      * Get the active instance of AllianceApiService
      * @returns Instance of AllianceApiService
      */
-    public static getInstance(): AllianceApiService {
+    public static getInstance(): AllianceSDK {
         return this._instance;
     }
 }
@@ -213,6 +226,7 @@ export interface AllianceRequestBuilder {
         route: AllianceRoute,
         config: AxiosRequestConfig,
         errorHandler: ErrorHandler,
+        cancel: AllianceCancelFunction,
     ): AxiosRequestConfig;
 
     /**
