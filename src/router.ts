@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse, CancelTokenSource } from "axios";
 import { ApiError, ErrorHandler } from "./error";
+import { ClientInternalError } from "./errors";
 import { Pageable } from "./pagination";
 import { HashMap } from "./util";
 
@@ -80,8 +81,10 @@ export class AllianceRequest<T> {
             let result: T = null;
             let promise: Promise<AxiosResponse<T>>;
 
-            if (this._route.method.toLowerCase() === "get") {
-                promise = axios.get(
+            const method = this._route.method.toLowerCase();
+
+            if (method === "get" || method === "delete") {
+                promise = axios[method](
                     buildFullPath(this._route),
                     this._allianceConfig.requestBuilder.buildRequestConfig(
                         this._route,
@@ -89,18 +92,8 @@ export class AllianceRequest<T> {
                         this._allianceConfig.errorHandler,
                     ),
                 );
-            } else if (this._route.method.toLowerCase() === "post") {
-                promise = axios.post(
-                    buildFullPath(this._route),
-                    this._data,
-                    this._allianceConfig.requestBuilder.buildRequestConfig(
-                        this._route,
-                        this._config,
-                        this._allianceConfig.errorHandler,
-                    ),
-                );
-            } else if (this._route.method.toLowerCase() === "put") {
-                promise = axios.put(
+            } else if (method === "post" || method === "put") {
+                promise = axios[method](
                     buildFullPath(this._route),
                     this._data,
                     this._allianceConfig.requestBuilder.buildRequestConfig(
@@ -109,15 +102,15 @@ export class AllianceRequest<T> {
                         this._allianceConfig.errorHandler,
                     ),
                 );
-            } else if (this._route.method.toLowerCase() === "delete") {
-                promise = axios.delete(
-                    buildFullPath(this._route),
-                    this._allianceConfig.requestBuilder.buildRequestConfig(
-                        this._route,
-                        this._config,
-                        this._allianceConfig.errorHandler,
-                    ),
-                );
+            } else {
+                if(this._defaults) {
+                    resolve(this._defaults);
+                } else {
+                    reject(new ClientInternalError());
+                }
+
+                console.warn("Unsupported request method by client. Supported: GET, POST, PUT, DELETE");
+                return;
             }
 
             promise
@@ -142,28 +135,30 @@ export class AllianceRequest<T> {
                     resolve(result);
                 })
                 .catch((reason) => {
+                    let rejectData;
+
                     if (reason.response) {
                         const response: AxiosResponse<ApiError> = reason.response;
 
                         if (handleErrorInternal) {
                             this._allianceConfig.errorHandler.handleErrorResponse(response);
                         } else {
-                            reject(response.data);
+                            rejectData = response.data;
                         }
                     } else {
                         if (handleErrorInternal) {
                             this._allianceConfig.errorHandler.handleError(reason);
                         } else {
-                            reject(reason);
+                            rejectData = reason;
                         }
                     }
 
                     // Return default values if set
                     if (this._defaults) {
-                        result = this._defaults;
+                        resolve(this._defaults);
+                    } else {
+                        reject(rejectData)
                     }
-
-                    resolve(result);
                 });
         });
     }
