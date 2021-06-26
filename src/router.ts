@@ -118,21 +118,20 @@ export class AllianceRequest<T> {
                     if (value.status != 200) {
                         const response: AxiosResponse<ApiError> = value;
 
-                        if (handleErrorInternal) {
-                            this._allianceConfig.errorHandler.handleErrorResponse(response);
+                        if(this._defaults) {
+                            resolve(this._defaults);
+                            console.warn("An error occured but default behaviour was specified: ", response.data as ApiError)
                         } else {
-                            reject(response.data as ApiError);
-                        }
-
-                        // Return default values if set
-                        if (this._defaults) {
-                            result = this._defaults;
+                            if (handleErrorInternal) {
+                                this._allianceConfig.errorHandler.handleErrorResponse(response);
+                            } else {
+                                reject(response.data as ApiError);
+                                return;
+                            }
                         }
                     } else {
-                        result = value.data;
+                        resolve(result);
                     }
-
-                    resolve(result);
                 })
                 .catch((reason) => {
                     let rejectData;
