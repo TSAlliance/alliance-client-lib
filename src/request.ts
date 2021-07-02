@@ -77,10 +77,26 @@ export class AllianceRequest<T> {
     }
 
     /**
+     * Perform request and do not handle errors automatically.
+     * @returns Promise of type T
+     */
+    public async performSilent(): Promise<T> {
+        return this.performRequest(false);
+    }
+
+    /**
+     * Perform request and handle errors automatically.
+     * @returns Promise of type T
+     */
+    public async perform(): Promise<T> {
+        return this.performRequest(true);
+    }
+
+    /**
      * Perform the request
      * @returns A promise containing the requested type or null
      */
-    public async perform(handleErrorInternal: boolean = true): Promise<T> {
+    private async performRequest(handleErrorInternal: boolean): Promise<T> {
         return new Promise((resolve, reject) => {
             let result: T = null;
             let promise: Promise<AxiosResponse<T>>;
