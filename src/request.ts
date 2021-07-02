@@ -177,7 +177,7 @@ export class AllianceRequest<T> {
 }
 
 export class AllianceSDK {
-    private static _instance: AllianceSDK;
+    private static _instances: HashMap<AllianceSDK>;
     private _allianceConfig: AllianceConfig;
 
     constructor(config: AllianceConfig) {
@@ -196,21 +196,22 @@ export class AllianceSDK {
 
     /**
      * Create new instance of AllianceApiService
+     * @param instanceName Name of the instance
      * @param config Configuration of base url
      * @returns Instance of AllianceApiService
      */
-    public static createInstance(config: AllianceConfig): AllianceSDK {
-        this._instance = new AllianceSDK(config);
-        this._instance._allianceConfig.requestBuilder.buildAxios(config);
-        return this._instance;
+    public static createInstance(instanceName: string, config: AllianceConfig): AllianceSDK {
+        this._instances[instanceName] = new AllianceSDK(config);
+        this._instances[instanceName]._allianceConfig.requestBuilder.buildAxios(config);
+        return this._instances[instanceName];
     }
 
     /**
      * Get the active instance of AllianceApiService
      * @returns Instance of AllianceApiService
      */
-    public static getInstance(): AllianceSDK {
-        return this._instance;
+    public static getInstance(instanceName: string): AllianceSDK {
+        return this._instances[instanceName];
     }
 }
 
@@ -252,11 +253,13 @@ function buildFullPath(route: AllianceRoute): string {
         ...route.pageable,
     };
 
-    path +=
-        "?" +
-        Object.keys(query)
-            .map((key) => key + "=" + query[key])
-            .join("&");
+    if (Object.keys(query).length > 0) {
+        path +=
+            "?" +
+            Object.keys(query)
+                .map((key) => key + "=" + query[key])
+                .join("&");
+    }
 
     if (route.params) {
         for (const key in route.params) {
