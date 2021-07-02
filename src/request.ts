@@ -77,19 +77,19 @@ export class AllianceRequest<T> {
     }
 
     /**
-     * Perform request and do not handle errors automatically.
-     * @returns Promise of type T
-     */
-    public async performSilent(): Promise<T> {
-        return this.performRequest(false);
-    }
-
-    /**
      * Perform request and handle errors automatically.
      * @returns Promise of type T
      */
-    public async perform(): Promise<T> {
+    public async performSilent(): Promise<T> {
         return this.performRequest(true);
+    }
+
+    /**
+     * Perform request and do not handle errors automatically.
+     * @returns Promise of type T
+     */
+    public async perform(): Promise<T> {
+        return this.performRequest(false);
     }
 
     /**
