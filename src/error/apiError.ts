@@ -1,10 +1,4 @@
-import { AxiosResponse } from "axios";
-import { HashMap } from "./util";
-
-export interface ErrorHandler {
-    handleError(error: ApiError): void;
-    handleErrorResponse(response: AxiosResponse<any>): void;
-}
+import { HashMap } from "../util/hashMap";
 
 export abstract class ApiError extends Error {
     public timestamp: Date;

@@ -1,4 +1,4 @@
-import { ApiError } from "./error";
+import { ApiError } from "./apiError";
 
 export class ClientInternalError extends ApiError {
     constructor() {

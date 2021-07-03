@@ -1,8 +1,9 @@
 import axios, { AxiosRequestConfig, AxiosResponse, CancelTokenSource } from "axios";
-import { ApiError, ErrorHandler } from "./error";
-import { ClientInternalError } from "./errors";
-import { Pageable } from "./pagination";
-import { HashMap } from "./util";
+import { ApiError } from "../error/apiError";
+import { ErrorHandler } from "../error/errorHandler";
+import { ClientInternalError } from "../error/errors";
+import { Pageable } from "../pagination/pageable";
+import { HashMap } from "../util/hashMap";
 
 export enum AllianceRouteMethod {
     GET = "get",

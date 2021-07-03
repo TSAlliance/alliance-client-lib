@@ -1,17 +1,6 @@
-import { HashMap } from "./util";
-
-export interface Event<T> {
-    eventName: string;
-    payload: T;
-}
-
-export interface EventListener {
-    /**
-     * Handle a fired event
-     * @param event Event to handle
-     */
-    (event: Event<any>): void;
-}
+import { HashMap } from "../util/hashMap";
+import { Event } from "./event";
+import { EventListener } from "./eventListener";
 
 export class EventPublisher {
     private static _eventListenerRegistry: HashMap<EventListener> = {};
@@ -37,5 +26,9 @@ export class EventPublisher {
         for (const listener of listeners) {
             listener(event);
         }
+    }
+
+    public static unregister(eventName: string) {
+        this._eventListenerRegistry[eventName.toLowerCase()] = undefined;
     }
 }
