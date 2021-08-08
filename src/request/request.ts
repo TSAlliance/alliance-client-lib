@@ -194,7 +194,7 @@ export class AllianceRequest<T> {
 }
 
 export class AllianceSDK {
-    private static _instances: HashMap<AllianceSDK>;
+    private static _instances: HashMap<AllianceSDK> = {};
     private _allianceConfig: AllianceConfig;
 
     constructor(config: AllianceConfig) {
