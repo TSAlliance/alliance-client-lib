@@ -1,23 +1,29 @@
-import { HashMap } from "../util/hashMap";
-
-export abstract class ApiError extends Error {
+export interface ApiErrorInfo {
+    statusCode?: number;
+    isCritical?: boolean;
+    details?: Record<string, any>;
+}
+export class ApiError extends Error {
     public timestamp: Date;
     public message: string;
-    public error: string;
-    public details: HashMap<any> = {};
+    public errorId: string;
+    public details: Record<string, any> = {};
     public statusCode: number;
+    public isCritical: boolean;
 
-    constructor(message: string, statusCode: number, errorCode?: string) {
+    constructor(message: string, errorId: string, info?: ApiErrorInfo) {
         super(message);
 
         this.timestamp = new Date();
-        this.error = errorCode || "UNKNOWN_ERROR";
+        this.errorId = errorId || "UNKNOWN_ERROR";
         this.message = this.message;
-        this.statusCode = statusCode;
+        this.statusCode = info?.statusCode;
+        this.isCritical = info?.isCritical;
+        this.details = info?.details;
     }
 
     public putDetail(key: string, value: any): void {
-        let details: HashMap<any> = this.details || {};
+        let details: Record<string, any> = this.details || {};
         details[key] = value;
 
         this.details["details"] = details;
@@ -27,7 +33,19 @@ export abstract class ApiError extends Error {
         this.details["details"] = details;
     }
 
-    public setDetailsMap(details: HashMap<any>): void {
+    public setDetailsMap(details: Record<string, any>): void {
         this.details["details"] = details;
+    }
+
+    public toResponse(): Record<string, unknown> {
+        return {
+            statusCode: this.statusCode || 500,
+            message: this.isCritical
+                ? "An internal server error occured. Please report to administrator"
+                : this.message,
+            timestamp: this.timestamp,
+            errorId: this.errorId,
+            details: this.details,
+        };
     }
 }

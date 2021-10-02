@@ -1,6 +1,6 @@
 {
   "name": "@tsalliance/sdk",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "Javascript library for making development easier and more maintainable for client applications.",
   "main": "lib/index.js",
   "license": "MIT",
